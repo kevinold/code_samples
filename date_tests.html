@@ -1,0 +1,84 @@
+<!--# set var="title" value="Home" -->
+<!--# block name="scripts" -->
+
+<!--# endblock -->
+
+<!--# include file="/common/page_header.html$is_args$args" -->
+
+<link rel="stylesheet" href="http://code.jquery.com/qunit/qunit-1.11.0.css" />
+<div id="qunit" style="width:93%; margin:40px;"></div>
+<script src="http://code.jquery.com/qunit/qunit-1.11.0.js"></script>
+
+<script type="text/javascript">
+  test( "hello test", function() {
+    ok( 1 == "1", "Passed!" );
+  });
+
+  test( "xdate tests", function() {
+
+    var MDYdashes = '04-08-1980';
+    var MDYslashes = "04/08/1980";
+    var YMDdashes = '1980-04-08';
+    var YMDslashes = "1980/04/08";
+    var invalid_MDYdashes = '15-08-1980';
+    var invalid_MDYslashes = "15/08/1980";
+    var invalid_YMDdashes = '1980-15-38';
+    var invalid_YMDslashes = "1980/15/38";
+    var MDYd = new XDate(MDYdashes);
+    var MDYs = new XDate(MDYslashes);
+    var YMDd = new XDate(YMDdashes);
+    var YMDs = new XDate(YMDslashes);
+    var invalid_MDYd = new XDate(invalid_MDYdashes);
+    var invalid_MDYs = new XDate(invalid_MDYslashes);
+    var invalid_YMDd = new XDate(invalid_YMDdashes);
+    var invalid_YMDs = new XDate(invalid_YMDslashes);
+
+
+    equal(MDYd.valid(), true, MDYdashes + ' is valid');
+    equal(MDYs.valid(), true, MDYslashes + ' is valid');
+
+    equal(YMDd.valid(), true, YMDdashes + ' is valid');
+    equal(YMDs.valid(), true, YMDslashes + ' is valid');
+
+    equal(DG.Core.iso8601Date(YMDdashes), '19800408', YMDdashes + ' is valid against iso8601Date');
+    equal(DG.Core.iso8601Date(YMDslashes), '19800408', YMDslashes + ' is valid against iso8601Date');
+
+    equal(DG.Core.iso8601Date(invalid_YMDdashes), false, invalid_YMDdashes + ' is invalid against iso8601Date');
+    equal(DG.Core.iso8601Date(invalid_YMDslashes), false, invalid_YMDslashes + ' is invalid against iso8601Date');
+
+    equal(invalid_MDYd.valid(), false, invalid_MDYdashes + ' is invalid');
+    equal(invalid_MDYs.valid(), false, invalid_MDYslashes + ' is invalid');
+
+    equal(MDYd.getMonth() + 1, 4, MDYdashes + ' month is correct');
+    equal(MDYs.getMonth() + 1, 4, MDYslashes + ' month is correct');
+
+    equal(MDYd.getDate(), 8, MDYdashes + ' day is correct');
+    equal(MDYs.getDate(), 8, MDYslashes + ' day is correct');
+
+    equal(MDYd.getFullYear(), 1980, MDYdashes + ' year is correct');
+    equal(MDYs.getFullYear(), 1980, MDYslashes + ' year is correct');
+
+    equal(validMonth(1), true, '1 is a valid month');
+    equal(validMonth(01), true, '01 is a valid month');
+
+    equal(validMonth(15), false, '15 is an invalid month');
+    equal(validMonth(-2), false, '-2 is a invalid month');
+
+    equal(XDate('0408-1980').valid(), false, '0408-1980 is invalid');
+    equal(DG.Core.iso8601Date('0408-1980'), false, '0408-1980 is invalid');
+
+    equal(validNumberOfDaysForMonth(2, 31), false, 'Feb does not have more than 28 days');
+    equal(validNumberOfDaysForMonth(2, -1), false, 'Feb does not have -1 day');
+
+    equal(validNumberOfDaysForMonth(2, 16), true, '16 is a valid day for Feb');
+    equal(validNumberOfDaysForMonth(7, 4), true, '4 is a valid day for July');
+    equal(validNumberOfDaysForMonth(7, 1), true, '1 is a valid day for July');
+
+    equal(validYMD('2013/02/31'), false, '2013/02/31 is not valid');
+  });
+</script>
+
+<!--# block name="prototypes" -->
+<!--# endblock -->
+
+<!--# include file="/common/page_footer.html$is_args$args" -->
