@@ -1,0 +1,120 @@
+<!--# set var="title" value="Users" -->
+<!--# block name="scripts" -->
+    <script type="text/javascript">
+
+      function template(id) {
+        return Mustache.compile($('#' + id).html());
+      }
+
+      var UserModel = Backbone.Model.extend({
+      });
+
+      var UsersCollection = Backbone.Collection.extend({
+        url: DG.Services.Account.User.list,
+        model: UserModel,
+        parse: function(resp, xhr) {
+          this.header = resp.header;
+          this.stats = resp.stats;
+          return resp.users;
+        }
+      });
+
+      var UserTableView = Backbone.View.extend({
+        el: '#data-table-bb-tbody',
+        template: $('#data-table-template-bb').html(),
+        initialize: function() {
+          this.collection = new UsersCollection();
+          this.collection.bind("reset", _.bind(this.render, this));
+          this.collection.fetch({ 
+            data: $.param({ sid: DG.User.Settings.sid, uuid: DG.User.Settings.accountID}),
+            success: function(){
+              //console.log(JSON.stringify(this.collection));
+            }
+          });
+        },
+        render: function() {
+          this.$el.html(Mustache.render(this.template, { users: this.collection.toJSON() }));
+          return this;
+        }
+      });
+
+
+      $(document).ready(function(){
+          var userTable = new UserTableView();
+      });
+        
+    </script>
+<!--# endblock -->
+
+<!--# block name="styles" -->
+<!--# endblock -->
+
+<!--# include file="/common/page_header.html$is_args$args" -->
+<h1 data-i18n-token="global:users">Users</h1>
+
+<table id="data-table-bb" class="table table-condensed sortable dg-table">
+    <thead>
+        <th data-i18n-token="global:name"
+            data-dicomgrid-sort-name="user_name">Name</th>
+        <th data-dicomgrid-sort-name="account_login" data-i18n-token="global:organization-login">Organization Login</th>
+        <th data-dicomgrid-sort-name="user_email" data-i18n-token="global:user-email">User email</th>
+        <th data-dicomgrid-sort-name="account_email" data-i18n-token="global:organization-email">Organization Email</th>
+        <th data-dicomgrid-sort-name="account_alias" data-i18n-token="global:organization-alias">Organization Alias</th>
+        <th data-dicomgrid-sort-name="role_name" data-i18n-token="global:role">Role</th>
+        <th class="table-actions" width="225">&nbsp;</th>
+    </thead>
+    <tbody id="data-table-bb-tbody"></tbody>
+</table>
+
+<!--# block name="prototypes" -->
+<style id="data-table-template-bb" type="text/x-mustache">
+    {{#users}}
+        <tr valign="top" data-dicomgrid-userid="{{user_id}}" data-dicomgrid-username="{{user_name}}">
+            <td>
+                {{user_name}}
+            </td>
+            <td>
+                {{account_login}}
+            </td>
+            <td>
+                {{user_email}}
+            </td>
+            <td>
+                {{account_email}}
+            </td>
+            <td>
+                {{account_alias}}
+            </td>
+            <td>
+                {{role_name}}
+            </td>
+            <td>
+                <span class="pull-right" data-dicomgrid-permissions="account_user_edit">
+                    {{#account_login}}
+                    <button class="btn btn-small" data-dicomgrid-action-click="reset_user_password" data-i18n-token="global:reset-password">Reset Password</button>
+                    {{/account_login}}
+                    <a href="/organization/user.html?uuid={{user_id}}" class="btn btn-small" data-i18n-token="global:edit">Edit</a>
+                    <button data-dicomgrid-action-click="remove_user" class="btn btn-small btn-danger" data-i18n-token="global:remove">Remove</button>
+                </span>
+            </td>
+        </tr>
+    {{/users}}
+    {{^users}}
+        <tr valign="top">
+            <td></td>
+            <td colspan="3" data-i18n-token="user:no-found">No users found.</td>
+            <td></td>
+        </tr>
+    {{/users}}
+
+</style>
+<style id="data-row-bb-template" type="text/x-mustache">
+        <tr valign="top">
+            <td></td>
+            <td colspan="3" data-i18n-token="user:no-found">No users found.</td>
+            <td></td>
+        </tr>
+</style>
+<!--# endblock -->
+
+<!--# include file="/common/page_footer.html$is_args$args" -->
