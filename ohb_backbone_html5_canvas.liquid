@@ -1,0 +1,239 @@
+{% comment %}
+/*
+ * Backbone Views with Mustache templates
+ * HTML5 Canvas Bat "viewer" to glue together high-res bat images to provide a user with 
+ * a preview of their selections.
+ *
+ * Used on side project for oldhickorybats.com on Shopify
+ * currently under development at oldhickorybats-com.myshopify.com
+ */
+{% endcomment %}
+
+{% raw %}
+<script id="bat-length" type="text/mustache">
+  <div style="float:left; padding-right:20px;">
+  <label for="bat-length">Length</label>
+  <select class="single-option-selector" id="bat-length" name="properties[Length]">
+    {{#sizes}} 
+    <option value="{{ val }}" {{#sel}}selected{{/sel}}>{{ val }}</option>
+    {{/sizes}}
+  </select>
+  </div>
+</script>
+
+<script id="bat-cup" type="text/mustache">
+  <div style="float:left; padding-right:20px;">
+  <label for="bat-cup">Cup</label>
+  <select class="single-option-selector" id="bat-cup" name="properties[Cup]">
+    {{#vals}} 
+    <option value="{{ val }}" {{#sel}}selected{{/sel}}>{{ pval }}</option>
+    {{/vals}}
+  </select>
+  </div>
+</script>
+
+<script id="bat-weight" type="text/mustache">
+  <div style="float:left">
+  <label for="bat-weight">Weight</label>
+  <select class="single-option-selector" id="bat-weight" name="properties[Weight]">
+    {{#vals}} 
+    <option value="{{ val }}" {{#sel}}selected{{/sel}}>{{ val }}</option>
+    {{/vals}}
+  </select>
+  </div>
+</script>
+{% endraw %}
+
+<script type="text/javascript">
+
+$(function(){
+
+  var batSizes, batCup, batWeight;
+  var product_type = '{{ product.type }}';
+  var product_tags = '{{ product.tags }}';
+
+  if (product_type === 'youth') {
+    // [27 ... 32]
+    batSizes = _.map(_.range(27, 33), function(n) { 
+      return { val: n, sel: n === 27 ? true : false };
+    });
+  } else if (product_type === 'Training Bats') {
+      batSizes = _.map(_.range(26, 27), function(n) { 
+        return { val: n, sel: n === 26 ? true : false };
+      });
+      batWeight = [
+        { val: 'N/A', sel: true }
+      ];
+      batCup = [
+        { val: 'no', pval: 'No', sel: true }
+      ];
+  } else if (product_type === 'Diamond Series') {
+
+    if (product_tags === 'Diamond Series Youth') {
+      // [26 ... 32]
+      batSizes = _.map(_.range(26, 33), function(n) { 
+        return { val: n, sel: n === 26 ? true : false };
+      });
+      batWeight = [
+        { val: '-4', sel: true }
+      ];
+    } else {
+      // [32 .. 34]
+      batSizes = _.map(_.range(32, 34, .5), function(n) { 
+        return { val: n, sel: n === 32 ? true : false };
+      });
+      batWeight = [
+        { val: '-2', sel: true }
+      ];
+    }
+    batCup = [
+      { val: 'yes', pval: 'Yes', sel: true }
+    ];
+  } else if (product_type === 'Custom Pro') {
+    // [27, 31.5 ... 35]
+    batSizes = _.map(_.range(27, 35.5, .5), function(n) { 
+      return { val: n, sel: n === 33 ? true : false };
+    });
+    batCup = [
+      { val: 'yes', pval: 'Yes', sel: true },
+      { val: 'no', pval: 'No' }
+    ];
+    batWeight = [
+      { val: '+3' },
+      { val: '+2' },
+      { val: '+1' },
+      { val: 'even', sel: true },
+      { val: '-1' },
+      { val: '-2' },
+      { val: '-3' },
+    ];
+  } else {
+    // nothing
+  }
+
+  if (product_type === 'Custom Pro'
+      || product_type === 'Diamond Series'
+      || product_type === 'Training Bats') {
+    var BatLengthView = Backbone.View.extend({
+      el: '#other-options-container',
+      render: function() {
+        var markup = Mustache.render($('#bat-length').html(), { sizes: batSizes });
+        this.$el.append(markup);
+      }
+    });
+
+    var BatCupView = Backbone.View.extend({
+      el: '#other-options-container',
+      render: function() {
+        var markup = Mustache.render($('#bat-cup').html(), { vals: batCup });
+        this.$el.append(markup);
+      }
+    });
+
+    var BatWeightView = Backbone.View.extend({
+      el: '#other-options-container',
+      render: function() {
+        var markup = Mustache.render($('#bat-weight').html(), { vals: batWeight });
+        this.$el.append(markup);
+      }
+    });
+
+    var blView = new BatLengthView();
+    var bcView = new BatCupView();
+    var bwView = new BatWeightView();
+
+    blView.render();
+    bcView.render();
+    bwView.render();
+  
+  var canvas = document.getElementById('myCanvas');
+  var canvas2 = document.getElementById('myCanvas2');
+  var context = canvas.getContext('2d');
+  var context2 = canvas2.getContext('2d');
+  var BimageObj = new Image();
+  var HimageObj = new Image();
+  var LimageObj = new Image();
+
+  HimageObj.onload = function() {
+    var sourceX = 0;
+    var sourceY = 0;
+    var sourceWidth = 240;
+    var sourceHeight = 43;
+    var destWidth = sourceWidth;
+    var destHeight = sourceHeight;
+    var destX = 0;
+    var destY = 0;
+
+    context.drawImage(HimageObj, sourceX, sourceY, sourceWidth, sourceHeight, destX, destY, destWidth, destHeight);
+  };
+
+  BimageObj.onload = function() {
+    var sourceX = 240;
+    var sourceY = 0;
+    var sourceWidth = 240;
+    var sourceHeight = 43;
+    var destWidth = sourceWidth;
+    var destHeight = sourceHeight;
+    var destX = 240;
+    var destY = 0;
+
+    context.drawImage(BimageObj, sourceX, sourceY, sourceWidth, sourceHeight, destX, destY, destWidth, destHeight);
+  };
+
+  LimageObj.onload = function() {
+    var sourceX = 0;
+    var sourceY = 0;
+    var sourceWidth = 50;
+    var sourceHeight = 25;
+    var destWidth = sourceWidth;
+    var destHeight = sourceHeight;
+    var destX = 260;
+    var destY = 10;
+
+    context2.drawImage(LimageObj, sourceX, sourceY, sourceWidth, sourceHeight, destX, destY, destWidth, destHeight);
+  };
+
+
+  $("#bat-handle").on("change", function(e) {
+    var randomNum = Math.floor(Math.random() * 1000) + 2;
+    var v = $(this).val();
+    v = v.replace('\(stain\)', '').trim();
+    v = v.replace('\(clear lacquer\)', '').trim();
+    v = v.replace('\(ash bats only\)', '').trim();
+
+    HimageObj.src = 'https://cdn.shopify.com/s/files/1/0200/8946/t/2/assets/'+ v + '_large.jpg';
+
+  });
+
+  $("#bat-barrel").on("change", function(e) {
+    var randomNum = Math.floor(Math.random() * 1000) + 2;
+    var v = $(this).val();
+    v = v.replace('\(stain\)', '').trim();
+    v = v.replace('\(clear lacquer\)', '').trim();
+    v = v.replace('\(ash bats only\)', '').trim();
+
+    BimageObj.src = 'https://cdn.shopify.com/s/files/1/0200/8946/t/2/assets/'+ v + '_large.jpg';
+  });
+
+  $("#bat-logo").on("change", function(e) {
+    var randomNum = Math.floor(Math.random() * 1000) + 2;
+    var v = $(this).val();
+    v = v.toLowerCase().trim();
+    v = v.replace(' ', '-').trim();
+
+
+    context2.clearRect(0, 0, canvas2.width, canvas2.height);
+    context2.beginPath();
+    LimageObj.src = 'https://cdn.shopify.com/s/files/1/0200/8946/t/2/assets/logo-'+ v + '_thumb.png';
+  });
+
+  $("#bat-handle").trigger("change");
+  $("#bat-barrel").trigger("change");
+  $("#bat-logo").trigger("change");
+
+  }
+
+});
+
+</script>
+
